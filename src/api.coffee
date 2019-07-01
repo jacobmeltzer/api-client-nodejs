@@ -75,6 +75,17 @@ class Requester
 					callback { error : body }
 
 class BasicCrud
+
+	respond: (response, callback) ->
+		if callback?
+				callback response
+		else
+				new Promise (resolve, reject) ->
+					if response.error?
+						reject Error response.error
+					else
+						resolve response
+
 	constructor: (@api, @path) ->
 
 	list: (params= {}, callback) =>
@@ -83,13 +94,11 @@ class BasicCrud
 			params = {}
 
 		@api.get @path, params, (response) =>
-			if callback?
-				callback response
+			@.respond(response, callback)
 
 	get: (id = '', callback) =>
 		@api.get @path + '/' + id, {}, (response) =>
-			if callback?
-				callback response
+			@.respond(response, callback)
 
 	create: (params = {}, callback) =>
 		if typeof params == 'function' and !callback?
@@ -97,8 +106,7 @@ class BasicCrud
 			params = {}
 
 		@api.post @path, params, (response) =>
-			if callback?
-				callback response
+			@.respond(response, callback)
 
 	update: (id = '', params = {}, callback) =>
 		if typeof params == 'function' and !callback?
@@ -106,13 +114,11 @@ class BasicCrud
 			params = {}
 
 		@api.put @path + '/' + id, params, (response) =>
-			if callback?
-				callback response
+			@.respond(response, callback)
 
 	delete: (id = '', callback) =>
 		@api.del @path + '/' + id, {}, (response) =>
-			if callback?
-				callback response
+			@.respond(response, callback)
 
 class Agents extends BasicCrud
 	constructor: (@api) ->

@@ -14,7 +14,8 @@
   },
   "main": "./lib/api",
   "dependencies": {
-    "request": "2.x"
+    "request": "^2.88.0",
+    "request-promise": "^4.2.4"
   },
   "devDependencies": {
     "coffee-script": "~1.6.3"

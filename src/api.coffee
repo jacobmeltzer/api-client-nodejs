@@ -1,4 +1,4 @@
-request = require 'request'
+request = require 'request-promise'
 crypto = require 'crypto'
 
 class Requester
@@ -9,110 +9,72 @@ class Requester
 							password: @apiKey
 						headers:
 							'X-API-Version': @apiVersion
+						simple: true,
+						json: true
 
 	get: (method, data = {}, callback) =>
 		@request
 			url: @host + method
 			qs: data
-		, ( error, response, body) =>
-			if error?
-				callback { error: error }
-			else
-				if response.statusCode == 200
-					try
-						callback JSON.parse body
-					catch error
-						callback { error: error, body: body }
-				else
-					callback { error : body }
-
+		
 	post: (method, data = {}, callback) =>
 		@request.post
 			url: @host + method
 			form: data
-		, ( error, response, body) =>
-			if error?
-				callback { error: error }
-			else
-				if response.statusCode == 200
-					try
-						callback JSON.parse body
-					catch error
-						callback { error: error, body: body }
-				else
-					callback { error : body }
 
 	put: (method, data = {}, callback) =>
 		@request.put
 			url: @host + method
 			form: data
-		, ( error, response, body) =>
-			if error?
-				callback { error: error }
-			else
-				if response.statusCode == 200
-					try
-						callback JSON.parse body
-					catch error
-						callback { error: error, body: body }
-				else
-					callback { error : body }
 
 	del: (method, data = {}, callback) =>
 		@request.del
 			url: @host + method
 			form: data
-		, ( error, response, body) =>
-			if error?
-				callback { error: error }
-			else
-				if response.statusCode == 200
-					try
-						callback JSON.parse body
-					catch error
-						callback { error: error, body: body }
-				else
-					callback { error : body }
 
 class BasicCrud
 	constructor: (@api, @path) ->
+
+	response: (request, callback) =>
+		if callback?
+			request.then (result) ->
+				callback(result)
+			.catch (err) ->
+				callback(err.error)
+
+		request
 
 	list: (params= {}, callback) =>
 		if typeof params == 'function' and !callback?
 			callback = params
 			params = {}
 
-		@api.get @path, params, (response) =>
-			if callback?
-				callback response
+		request = @api.get(@path, params)
+		@.response(request, callback)
 
 	get: (id = '', callback) =>
-		@api.get @path + '/' + id, {}, (response) =>
-			if callback?
-				callback response
+		request = @api.get @path + '/' + id, {}
+		@.response(request, callback)
 
 	create: (params = {}, callback) =>
 		if typeof params == 'function' and !callback?
 			callback = params
 			params = {}
 
-		@api.post @path, params, (response) =>
-			if callback?
-				callback response
+		request = @api.post @path, params
+		@.response(request, callback)
 
 	update: (id = '', params = {}, callback) =>
 		if typeof params == 'function' and !callback?
 			callback = params
 			params = {}
 
-		@api.put @path + '/' + id, params, (response) =>
-			if callback?
-				callback response
+		request = @api.put @path + '/' + id, params
+		@.response(request, callback)
 
 	delete: (id = '', callback) =>
-		@api.del @path + '/' + id, {}, (response) =>
-			if callback?
-				callback response
+		request = @api.del @path + '/' + id, {}
+		@.response(request, callback)
 
 class Agents extends BasicCrud
 	constructor: (@api) ->
